@@ -52,3 +52,39 @@ def expand_field(text, name, low, high):
     return sorted(values)
 
 
+
+def parse(expression):
+    parts = expression.split(None, 5)
+    if len(parts) < 6:
+        raise ValueError("expected five time fields followed by a command")
+
+    rows = []
+    for text, (name, low, high) in zip(parts[:5], FIELDS):
+        values = expand_field(text, name, low, high)
+        rows.append((name, " ".join(str(v) for v in values)))
+    rows.append(("command", parts[5].rstrip()))
+    return rows
+
+
+def format_table(rows):
+    return "\n".join(f"{label:<{NAME_WIDTH}}{text}" for label, text in rows)
+
+
+def main(argv=None):
+    argv = sys.argv[1:] if argv is None else argv
+    if len(argv) != 1:
+        print('usage: cron_parser.py "<minute> <hour> <day of month> '
+              '<month> <day of week> <command>"', file=sys.stderr)
+        return 2
+    try:
+        print(format_table(parse(argv[0])))
+    except ValueError as error:
+        print(f"error: {error}", file=sys.stderr)
+        return 1
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
+
+
